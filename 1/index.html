@@ -1,0 +1,322 @@
+<html>
+<head>
+  <title>escence</title>
+
+  <script type="text/javascript" src="webgl-utils.js"></script>
+  <script type="text/javascript" src="fboTextureUtils.js"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+<link href='http://fonts.googleapis.com/css?family=Vollkorn' rel='stylesheet' type='text/css'>  <style>
+  h1{
+    position:absolute;
+    top: 0;
+    left: 0;
+    color: white;
+    font-size:100px;
+    margin: 0;
+    font-family: "Vollkorn";
+    /*font-style: italic;*/
+  }
+  </style>
+</head>
+
+<body style="padding:0px; margin:0px;">
+  <div id="container">
+    <canvas id="canvas" style ="background:black; position:absolute;top:0;left:0;z-index:0; width:100%; height:100%;">
+      Update your browser, ya dingus! You need one that supports WebGL. Try Google Chrome.
+    </canvas>
+  </div>
+<!-- <h1>Ezra Miller</h1> -->
+
+<script id="baseVs" type="x-shader/x-vertex">
+//attributes come from fboTextureUtils
+attribute vec3 pos;
+attribute vec4 color;
+attribute vec2 texcoord;
+
+varying vec2 v_texCoord;
+varying vec4 vColor;
+
+void main() {
+   gl_Position = vec4(pos.x,pos.y,pos.z,1.0);
+   v_texCoord = texcoord;
+   vColor = color;
+}
+</script>
+<script id="baseFs" type="x-shader/x-fragment">
+precision mediump float;
+uniform sampler2D u_image; 
+uniform sampler2D u_image2; 
+uniform sampler2D u_image3; 
+uniform float time; // seconds
+varying vec2 v_texCoord;
+uniform vec2 res;
+
+
+//1. Go fullscreen
+//2. Take drugs now
+
+//iq noise fn
+float hash( float n )
+{
+    return fract(sin(n)*43758.5453);
+}
+float noise( in vec3 x )
+{
+    vec3 p = floor(x);
+    vec3 f = fract(x);
+
+    f = f*f*(3.0-2.0*f);
+    float n = p.x + p.y*57.0 + 113.0*p.z;
+    return mix(mix(mix( hash(n+  0.0), hash(n+  1.0),f.x),
+                   mix( hash(n+ 57.0), hash(n+ 58.0),f.x),f.y),
+               mix(mix( hash(n+113.0), hash(n+114.0),f.x),
+                   mix( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
+}
+
+//x3
+vec3 noise3( in vec3 x)
+{
+  return vec3( noise(x+vec3(123.456,.567,.37)),
+        noise(x+vec3(.11,47.43,19.17)),
+        noise(x) );
+}
+
+//http://dept-info.labri.fr/~schlick/DOC/gem2.ps.gz
+float bias(float x, float b) {
+  return  x/((1./b-2.)*(1.-x)+1.);
+}
+
+float gain(float x, float g) {
+  float t = (1./g-2.)*(1.-(2.*x));  
+  return x<0.5 ? (x/(t+1.)) : (t-x)/(t-1.);
+}
+
+
+mat3 rotation(float angle, vec3 axis)
+{
+    float s = sin(-angle);
+    float c = cos(-angle);
+    float oc = 1.0 - c;
+  vec3 sa = axis * s;
+  vec3 oca = axis * oc;
+    return mat3(  
+    oca.x * axis + vec3(  c,  -sa.z,  sa.y),
+    oca.y * axis + vec3( sa.z,  c,    -sa.x),   
+    oca.z * axis + vec3(-sa.y,  sa.x, c));  
+}
+
+vec3 fbm(vec3 x, float H, float L, int oc)
+{
+  vec3 v = vec3(0);
+  float f = 1.;
+  for (int i=0; i<10; i++)
+  {
+    if (i >= oc) break;
+    float w = pow(f,-H);
+    v += noise3(x)*w;
+    x *= L;
+    f *= L;
+  }
+  return v;
+}
+
+vec3 smf(vec3 x, float H, float L, int oc, float off)
+{
+  vec3 v = vec3(1);
+  float f = 1.;
+  for (int i=0; i<10; i++)
+  {
+    if (i >= oc) break;
+    v *= off + f*(noise3(x)*2.-1.);
+    f *= H;
+    x *= L;
+  }
+  return v; 
+}
+
+
+void main(void)
+{
+
+  
+  // float time = iGlobalTime * 1.276;
+  
+  float slow = time*0.2;
+  //uv *= 1. + .5*slow*sin(slow*10.);
+  
+  float ts = time*0.37;
+  float change = gain(fract(ts),0.0008)+floor(ts);  //flick to a different view 
+            
+  vec3 p = vec3(v_texCoord*0.5,slow);         //coordinate + slight change over time
+  
+  vec3 axis = 1. * fbm(p, 0.5, 2., 8);        //random fbm axis of rotation
+  
+  vec3 colorVec =  0.5* 5. * fbm(p*0.3,0.5,2.,7);   //random base color
+  p += colorVec;
+  
+//  float mag = 4e5;  //published, rather garish?
+  float mag = 0.75e5; //still clips a bit
+//  mag = mag * (1.+sin(2.*3.1415927*ts)*0.75);
+  vec3 colorMod = mag * smf(texture2D(u_image,v_texCoord).rgb,0.7,2.,8,.2);     //multifractal saturation
+  colorVec += colorMod;
+  
+  colorVec = rotation(3.*length(axis)+slow*10.,normalize(axis))*colorVec;
+  
+  colorVec *= 0.05;
+      
+//  colorVec = colorVec / (1. + length(colorVec));  //tone it all down a bit
+  
+  colorVec = pow(colorVec,vec3(1./2.2));    //gamma
+  gl_FragColor = vec4(colorVec,1.0);
+}
+
+</script>
+
+<script id="reposFs" type="x-shader/x-fragment">
+precision mediump float;
+varying vec2 v_texCoord;
+
+uniform vec2 amt;
+uniform sampler2D u_image;
+uniform sampler2D u_image2;
+
+
+void main(){
+
+    vec2 tc = v_texCoord;
+    vec4 look = texture2D(u_image,tc);//sample repos texture
+    vec2 offs = vec2(look.y-look.x,look.w-look.z)*0.0;
+    vec2 coord = offs+tc;  //relative coordinates
+    
+    vec4 repos = texture2D(u_image, coord);
+    
+    gl_FragColor = repos;    
+} 
+</script>
+<script type="text/javascript">
+var gl, canvas, fbo, reposFbo;
+var baseProgram, baseTexture, reposProgram;
+var baseVs, baseFs, reposFs;
+var camTex;
+var videoLoaded = false;
+var firstFrame = true;
+var delay = 0;
+var time = 0.0;
+
+var video = document.createElement("video");
+canvas = document.getElementById("canvas");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+// document.addEventListener('mousedown', onDocumentMouseDown, false);
+
+// video.src = "satin.mp4";
+// video.loop = true;
+// video.playbackRate = 2.0;
+// video.play();
+// videoLoaded = true;
+
+initGl();
+initFbo();
+getCamAsTexture();
+window.requestAnimationFrame(loop);
+
+function initFbo () {
+  baseTexture = new pxBB();
+  fbo = new pxFbo();
+  reposFbo = new pxFbo();
+
+  fbo.allocate(canvas.width, canvas.height);
+  reposFbo.allocate(canvas.width, canvas.height);
+
+  baseVs = createShaderFromScriptElement(gl, "baseVs");
+  baseFs = createShaderFromScriptElement(gl, "baseFs");
+  reposFs = createShaderFromScriptElement(gl, "reposFs");
+
+  baseProgram = createProgram(gl, [baseVs, baseFs]);
+  reposProgram = createProgram(gl, [baseVs, reposFs]);
+
+  fbo.start();
+  gl.useProgram(baseProgram);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  fbo.draw(baseProgram);
+}
+
+function loop(){
+  window.requestAnimationFrame(loop);
+  if(videoLoaded){
+    // if(delay < 50){
+      getNewImg();
+      delay++;
+    // }
+    time+=0.1;
+    reposFbo.start();
+    gl.useProgram(baseProgram);
+    gl.uniform2f(gl.getUniformLocation(baseProgram,"res"), canvas.width, canvas.height);
+    gl.uniform1f(gl.getUniformLocation(baseProgram, "time"), time);
+    fbo.draw(baseProgram);
+    fbo.start();
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    reposFbo.draw(reposProgram);
+    // gl.enable(gl.BLEND);
+    // gl.blendFunc(gl.ONE_MINUS_SRC_COLOR, gl.SRC_COLOR);
+    gl.bindTexture(gl.TEXTURE_2D, camTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, camTex.image);
+  
+  }
+
+}
+
+function initGl(){
+  gl = getWebGLContext(canvas);
+}
+
+function initUniforms(w,h,time,mouse){
+
+}
+function getCamAsTexture(){
+  //create camera texture
+  camTex = createAndSetupTexture(gl);
+  camTex.image = video;
+  gl.bindTexture(gl.TEXTURE_2D, camTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, camTex.image);
+
+}
+
+function getNewImg(){
+   //gets a new frame
+    // requestAnimationFrame(getNewImg);
+   fbo.start();
+   baseTexture.draw(baseProgram, camTex);
+}
+
+window.addEventListener("click", function(){
+  getNewImg();
+})
+ // requestAnimationFrame(getNewImg);
+
+//capture video
+  window.addEventListener('DOMContentLoaded', function(){
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+ 
+    if (navigator.getUserMedia) {       
+        navigator.getUserMedia({video: true, audio: false}, handleVideo, videoError);
+    }
+ 
+    function handleVideo(stream) {
+      var url = window.URL || window.webkitURL;
+       video.src = url ? url.createObjectURL(stream) : stream;
+        video.play();
+        //video.src = window.URL.createObjectURL(stream);
+        videoLoaded = true;
+    }
+ 
+    function videoError(e) {
+      alert("There seems to be something wrong with your webcam :(");
+    }
+  });
+
+</script>
+
+</body>
+</html>

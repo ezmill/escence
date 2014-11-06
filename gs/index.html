@@ -1,0 +1,229 @@
+<html>
+<head>
+  <title>escence</title>
+
+  <script type="text/javascript" src="webgl-utils.js"></script>
+  <script type="text/javascript" src="fboTextureUtils.js"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+<link href='http://fonts.googleapis.com/css?family=Vollkorn' rel='stylesheet' type='text/css'>  <style>
+  h1{
+    position:absolute;
+    top: 0;
+    left: 0;
+    color: white;
+    font-size:100px;
+    margin: 0;
+    font-family: "Vollkorn";
+    /*font-style: italic;*/
+  }
+  </style>
+</head>
+
+<body style="padding:0px; margin:0px;">
+  <div id="container">
+    <canvas id="canvas" >
+      Update your browser, ya dingus! You need one that supports WebGL. Try Google Chrome.
+    </canvas>
+        <canvas id="bgCanvas" >
+      Update your browser, ya dingus! You need one that supports WebGL. Try Google Chrome.
+    </canvas>
+  </div>
+
+<button style="position:absolute; top:0; left:0;" id="subtract">test</button>
+<!-- <h1>Ezra Miller</h1> -->
+
+<script id="baseVs" type="x-shader/x-vertex">
+//attributes come from fboTextureUtils
+attribute vec3 pos;
+attribute vec4 color;
+attribute vec2 texcoord;
+
+varying vec2 v_texCoord;
+varying vec4 vColor;
+
+void main() {
+   gl_Position = vec4(pos.x,pos.y,pos.z,1.0);
+   v_texCoord = texcoord;
+   vColor = color;
+}
+</script>
+<script id="baseFs" type="x-shader/x-fragment">
+precision mediump float;
+uniform sampler2D u_image; 
+varying vec2 v_texCoord;
+
+void main(){
+
+}
+
+</script>
+
+<script type="text/javascript">
+var gl;
+var canvas, bgCanvas;
+var fbo, reposFbo;
+
+var baseProgram, baseTexture;
+var baseVs, baseFs, reposFs;
+var camTex;
+var videoLoaded = false;
+var firstFrame = true;
+var delay = 0;
+var time = 0.0;
+
+var video = document.createElement("video");
+
+canvas = document.getElementById("canvas");
+bgCanvas = document.getElementById("bgCanvas");
+button = document.getElementById("subtract");
+
+canvas.width = 500;
+bgCanvas.width = 500;
+canvas.height = 500;
+bgCanvas.height = 500;
+// document.addEventListener('mousedown', onDocumentMouseDown, false);
+
+// video.src = "satin.mp4";
+// video.loop = true;
+// video.playbackRate = 2.0;
+// video.play();
+// videoLoaded = true;
+var ctx = canvas.getContext('2d');
+var bgCtx = bgCanvas.getContext('2d');
+// initGl();
+
+
+
+button.onclick = detectBackground;
+
+function detectBackground(){
+
+      // img1 = ctx.createImageData(320,240),
+      // img2 = bgCtx.createImageData(320,240);
+      // view1 = new Uint8Array(img1.data.buffer),
+      // view2 = new Uint8Array(img2.data.buffer);
+
+        frame2 = bgCtx.getImageData(0, 0, canvas.width, canvas.height);
+        for(var x = 0; x < canvas.width; x++){
+          for(var y = 0; y < canvas.height; y++){
+              var location = (x + y * canvas.width)*4;
+              if ( frame.data[location] !== frame2.data[location]){
+                frame.data[location] = 255;
+              }
+              frame.data[location] = frame2.data[location]*2;
+              frame.data[location+1] = frame2.data[location+1];
+              frame.data[location+2] = frame2.data[location+2];
+              frame.data[location+3] = frame2.data[location+3];
+          }
+        }
+        // var imagePixels = ctx.createImageData(canvas.width,canvas.height);
+        // var imagePixels2 = ctx.createImageData(canvas.width,canvas.height);
+        ctx.putImageData(frame,0,0);
+
+        // for(var i = 0; i < frame.data.length; i++){
+        //   imagePixels.data[i] = frame.data[i];
+        // }
+      // bgCtx.drawImage(video, 0, 0, bgCanvas.width, bgCanvas.height);
+
+}
+// initFbo();
+// getCamAsTexture();
+// window.requestAnimationFrame(loop);
+
+// function initFbo () {
+//   baseTexture = new pxBB();
+//   fbo = new pxFbo();
+//   reposFbo = new pxFbo();
+
+//   fbo.allocate(canvas.width, canvas.height);
+//   reposFbo.allocate(canvas.width, canvas.height);
+
+//   baseVs = createShaderFromScriptElement(gl, "baseVs");
+//   baseFs = createShaderFromScriptElement(gl, "baseFs");
+//   reposFs = createShaderFromScriptElement(gl, "reposFs");
+
+//   baseProgram = createProgram(gl, [baseVs, baseFs]);
+//   reposProgram = createProgram(gl, [baseVs, reposFs]);
+
+//   fbo.start();
+//   gl.useProgram(baseProgram);
+//   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+//   fbo.draw(baseProgram);
+// }
+
+function loop(){
+  window.requestAnimationFrame(loop);
+  if(videoLoaded){
+    // if(delay < 50){
+      getNewImg();
+      delay++;
+    // }
+    time+=0.1;
+    reposFbo.start();
+    gl.useProgram(baseProgram);
+    gl.uniform2f(gl.getUniformLocation(baseProgram,"res"), canvas.width, canvas.height);
+    gl.uniform1f(gl.getUniformLocation(baseProgram, "time"), time);
+    fbo.draw(baseProgram);
+    fbo.start();
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    reposFbo.draw(reposProgram);
+    // gl.enable(gl.BLEND);
+    // gl.blendFunc(gl.ONE_MINUS_SRC_COLOR, gl.SRC_COLOR);
+    gl.bindTexture(gl.TEXTURE_2D, camTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, camTex.image);
+  
+  }
+
+}
+
+function initGl(){
+  gl = getWebGLContext(canvas);
+}
+
+function initUniforms(w,h,time,mouse){
+
+}
+function getCamAsTexture(){
+  //create camera texture
+  camTex = createAndSetupTexture(gl);
+  camTex.image = video;
+  gl.bindTexture(gl.TEXTURE_2D, camTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, camTex.image);
+
+}
+
+function getNewImg(){
+   //gets a new frame
+    // requestAnimationFrame(getNewImg);
+   fbo.start();
+   baseTexture.draw(baseProgram, camTex);
+}
+ // requestAnimationFrame(getNewImg);
+
+//capture video
+  window.addEventListener('DOMContentLoaded', function(){
+        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
+ 
+    if (navigator.getUserMedia) {       
+        navigator.getUserMedia({video: true, audio: false}, handleVideo, videoError);
+    }
+ 
+    function handleVideo(stream) {
+      var url = window.URL || window.webkitURL;
+       video.src = url ? url.createObjectURL(stream) : stream;
+        video.play();
+        //video.src = window.URL.createObjectURL(stream);
+        videoLoaded = true;
+
+    }
+ 
+    function videoError(e) {
+      alert("There seems to be something wrong with your webcam :(");
+    }
+  });
+
+</script>
+
+</body>
+</html>
