@@ -13,7 +13,7 @@ canvas.height = window.innerHeight;
 
 init();
 
-video.src = "satin.mp4";
+video.src = "fog.mp4";
 video.loop = true;
 // video.playbackRate = 0.25;
 video.play();
@@ -66,7 +66,6 @@ function loop(){
 		// if(delay < 50){
 		    getNewImg();
 		    // delay++;
-
 		    // console.log(delay);
 		// }
 		gl.useProgram(baseProgram);
@@ -102,8 +101,8 @@ window.addEventListener("click", function(){
 window.addEventListener("mousemove", function(event){
 	mouseX = (event.clientX );
     mouseY = (event.clientY );
-    mapMouseX = map(mouseX, window.innerWidth, 0.9999, 1.0001);
-    mapMouseY = map(mouseY, window.innerHeight, 0.9999,1.0001);
+    mapMouseX = map(mouseX, window.innerWidth, 0.9, 1.1);
+    mapMouseY = map(mouseY, window.innerHeight, 0.9,1.1);
 
 });
 function map(value,max,minrange,maxrange) {
