@@ -97,10 +97,10 @@ function getNewImg(){
    // requestAnimationFrame(getNewImg);
    ditherFbo.start();
 		   gl.enable(gl.BLEND);
-	    gl.blendFunc(gl.ONE_MINUS_DST_COLOR,gl.DST_COLOR); 
-	    // gl.blendFunc(gl.ONE_MINUS_CONSTANT_COLOR,gl.SRC_COLOR); 
+	    // gl.blendFunc(gl.ONE_MINUS_DST_COLOR,gl.DST_COLOR); 
+	    gl.blendFunc(gl.ONE_MINUS_CONSTANT_COLOR,gl.SRC_COLOR); 
    baseTexture.draw(baseProgram, camTex);
-   			   gl.disable(gl.BLEND);
+   			   // gl.disable(gl.BLEND);
 }
 function map(value,max,minrange,maxrange) {
     return ((max-value)/(max))*(maxrange-minrange)+minrange;

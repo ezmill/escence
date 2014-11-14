@@ -91,27 +91,30 @@ void main() {
   kernel2[3] = -1.0; kernel2[4] = 1.0; kernel2[5] = 1.0;
   kernel2[6] = 0.0; kernel2[7] = 1.0; kernel2[8] = 2.0;
 
-  kernel3[0] = 0.0; kernel3[1] = 0.0; kernel3[2] = 0.0;
-  kernel3[3] = -1.0; kernel3[4] = 1.0; kernel3[5] = 0.0;
-  kernel3[6] = 0.0; kernel3[7] = 0.0; kernel3[8] = 0.0;
+  kernel3[0] = 0.045; kernel3[1] = 0.122; kernel3[2] = 0.045;
+  kernel3[3] = 0.122; kernel3[4] = 0.332; kernel3[5] = 0.122;
+  kernel3[6] = 0.045; kernel3[7] = 0.122; kernel3[8] = 0.045;
 
 
   for(int i = 0; i <9; i++){
         // sum += texture2D(u_image, v_texCoord + offset[i]) * kernel2[i];
 
     sum += texture2D(u_image, v_texCoord + offset[i]) * kernel[i];
-    // sum += texture2D(u_image, v_texCoord + offset[i]) * kernel3[i];
+    sum += texture2D(u_image, v_texCoord + offset[i]) *kernel3[i];
     // sum += texture2D(u_image, v_texCoord + offset[i]) * kernel[i];
     sum += texture2D(u_image, v_texCoord + offset[i]) * kernel2[i];
 
+    kernelWeight += kernel3[i];
     kernelWeight += kernel[i];
+    kernelWeight += kernel2[i];
+    // kernelWeight += kernel[00i];
   }
 
   if (kernelWeight <= 0.0) {
      kernelWeight = 1.0;
   }
-  // gl_FragColor =(vec4((sum/kernelWeight).rgb, 1.0));
-  gl_FragColor =(sum + tex0) *0.5;
+  gl_FragColor =(vec4((sum/kernelWeight).rgb, 1.0));
+  // gl_FragColor =(sum + tex0) *0.5;
   // gl_FragColor =tex0;
 }
 </script>
