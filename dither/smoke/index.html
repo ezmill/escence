@@ -194,7 +194,7 @@
                 if (index == 63) limit = 0.34375;
             }
 
-            return brightness < limit ? 0.0 : 1.0;
+            return brightness < limit ? 0.0 : 0.2;
         }
 
         vec3 dither8x8(vec2 position, vec3 color) {
@@ -202,7 +202,7 @@
         }
 
         vec4 dither8x8(vec2 position, vec4 color) {
-            return vec4(color.rrr  * dither8x8(position, luma(color)), 1.0);
+            return vec4(color.rrr  * 100.0* dither8x8(position, luma(color)), 1.0);
         }
 
 
