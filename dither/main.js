@@ -50,14 +50,15 @@ function initFbosAndShaders(){
 	baseProgram = createProgram(gl, [translateVs, baseFs]);
 	ditherProgram = createProgram(gl, [baseVs, ditherFs]);
 
+	gl.useProgram(baseProgram);
+	gl.uniform1f(gl.getUniformLocation(baseProgram, "step_w"), 1.0/canvas.width);
+	gl.uniform1f(gl.getUniformLocation(baseProgram, "step_h"), 1.0/canvas.height);
 	
 }
 
 function getCamAsTexture(){
 	camTex = createAndSetupTexture(gl);
-	// camTex.image = new Image();
 	camTex.image = video;
-	// camTex.image.src = "4.png"
 	gl.bindTexture(gl.TEXTURE_2D, camTex);
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, camTex.image);
 }
@@ -69,19 +70,15 @@ function loop(){
 		    delay++;
 		    // console.log(delay);
 		}
+
 		if(!spacePressed){
 			gl.useProgram(baseProgram);
 		    gl.uniform2f(gl.getUniformLocation(baseProgram, "mouse"), mapMouseX, mapMouseY);
 		} else{
 			gl.uniform2f(gl.getUniformLocation(baseProgram, 'mouse'), 1.0,1.0);
-
 		}
 		
-
-
-
 		fbo.start();
-		// baseTexture.draw(baseProgram, camTex);
 		ditherFbo.draw(baseProgram)
 
 		ditherFbo.start();
@@ -100,19 +97,8 @@ function getNewImg(){
    // requestAnimationFrame(getNewImg);
    ditherFbo.start();
    baseTexture.draw(baseProgram, camTex);
+   			   gl.disable(gl.BLEND);
 }
-
-window.addEventListener("click", function(){
-  getNewImg();
-});
-
-window.addEventListener("mousemove", function(event){
-	mouseX = (event.clientX );
-    mouseY = (event.clientY );
-    mapMouseX = map(mouseX, window.innerWidth, 0.9, 1.1);
-    mapMouseY = map(mouseY, window.innerHeight, 0.9,1.1);
-
-});
 function map(value,max,minrange,maxrange) {
     return ((max-value)/(max))*(maxrange-minrange)+minrange;
 }
@@ -126,6 +112,17 @@ function pauseResume(){
 	}
 	pressCount++;
 }
+window.addEventListener("click", function(){
+  getNewImg();
+});
+
+window.addEventListener("mousemove", function(event){
+	mouseX = (event.clientX );
+    mouseY = (event.clientY );
+    mapMouseX = map(mouseX, window.innerWidth, 0.9, 1.1);
+    mapMouseY = map(mouseY, window.innerHeight, 0.9,1.1);
+
+});
 window.addEventListener("keydown",function(event){
 	if(event.keyCode === 32){
 		pauseResume();
