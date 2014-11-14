@@ -1,6 +1,6 @@
-var gl, canvas, fbo,  ditherFbo, baseTexture;
-var baseProgram,  ditherProgram;
-var baseVs, baseFs, ditherFs;
+var gl, canvas, fbo,  ditherFbo, blurFbo, baseTexture;
+var baseProgram,  ditherProgram, blurProgram;
+var baseVs, baseFs, ditherFs, blurFs;
 var camTex;
 var videoLoaded = false;
 var delay = 0;
@@ -36,19 +36,23 @@ function initFbosAndShaders(){
 	baseTexture = new pxBB();
 	fbo = new pxFbo();
 	ditherFbo = new pxFbo();
+	blurFbo = new pxFbo();
 	
 
 	fbo.allocate(canvas.width, canvas.height, true);
 	ditherFbo.allocate(canvas.width, canvas.height, true);
+	blurFbo.allocate(canvas.width, canvas.height, true);
 
 	baseVs = createShaderFromScriptElement(gl, "baseVs");
 	translateVs = createShaderFromScriptElement(gl, "translateVs");
 
 	baseFs = createShaderFromScriptElement(gl, "baseFs");
 	ditherFs = createShaderFromScriptElement(gl, "ditherFs");
+	blurFs = createShaderFromScriptElement(gl, "blurFs");
 
 	baseProgram = createProgram(gl, [translateVs, baseFs]);
 	ditherProgram = createProgram(gl, [baseVs, ditherFs]);
+	blurProgram = createProgram(gl, [baseVs, blurFs]);
 
 	gl.useProgram(baseProgram);
 	gl.uniform1f(gl.getUniformLocation(baseProgram, "step_w"), 1.0/canvas.width);
@@ -82,10 +86,13 @@ function loop(){
 		ditherFbo.draw(baseProgram)
 
 		ditherFbo.start();
-		fbo.draw(ditherProgram);
+		blurFbo.draw(ditherProgram);
+
+		blurFbo.start();
+		fbo.draw(blurProgram);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		ditherFbo.draw(baseProgram);
+		blurFbo.draw(baseProgram);
 
 		gl.bindTexture(gl.TEXTURE_2D, camTex);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, camTex.image);
@@ -95,10 +102,10 @@ function loop(){
 function getNewImg(){
    //gets a new frame
    // requestAnimationFrame(getNewImg);
-   ditherFbo.start();
-		   // gl.enable(gl.BLEND);
-	    // gl.blendFunc(gl.ONE_MINUS_DST_COLOR,gl.DST_COLOR); 
-	    // gl.blendFunc(gl.ONE_MINUS_CONSTANT_COLOR,gl.SRC_COLOR); 
+   blurFbo.start();
+	// gl.enable(gl.BLEND);
+    // gl.blendFunc(gl.ONE_MINUS_DST_COLOR,gl.DST_COLOR); 
+    // gl.blendFunc(gl.ONE_MINUS_SRC_COLOR,gl.CONSTANT_COLOR); 
    baseTexture.draw(baseProgram, camTex);
    			   // gl.disable(gl.BLEND);
 }

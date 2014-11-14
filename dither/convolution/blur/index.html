@@ -1,8 +1,8 @@
 <html>
 <head>
-	<title>Dither Feedback</title>
-	<script src="webgl-utils.js"></script>
-	<script src="fboTextureUtils.js"></script>
+  <title>Dither Feedback</title>
+  <script src="webgl-utils.js"></script>
+  <script src="fboTextureUtils.js"></script>
 </head>
 <body>
     <canvas id="canvas" style ="background:black; position:absolute;top:0;left:0;z-index:0; width:100%; height:100%;">
@@ -10,38 +10,38 @@
     </canvas>
 
 <script id="baseVs" type="x-shader/x-vertex">
-	attribute vec3 pos;
-	attribute vec4 color;
-	attribute vec2 texcoord;
+  attribute vec3 pos;
+  attribute vec4 color;
+  attribute vec2 texcoord;
 
-	varying vec2 v_texCoord;
-	varying vec4 vColor;
+  varying vec2 v_texCoord;
+  varying vec4 vColor;
 
-	void main() {
+  void main() {
 
-	   gl_Position = vec4((pos.x*1.0),pos.y,pos.z,1.0);
-	   v_texCoord = texcoord;
-	   vColor = color;
+     gl_Position = vec4((pos.x*1.0),pos.y,pos.z,1.0);
+     v_texCoord = texcoord;
+     vColor = color;
 
-	}
+  }
 </script>
 <script id="translateVs" type="x-shader/x-vertex">
-	//attributes come from fboTextureUtils
-	attribute vec3 pos;
-	attribute vec4 color;
-	attribute vec2 texcoord;
+  //attributes come from fboTextureUtils
+  attribute vec3 pos;
+  attribute vec4 color;
+  attribute vec2 texcoord;
 
-	varying vec2 v_texCoord;
-	varying vec4 vColor;
+  varying vec2 v_texCoord;
+  varying vec4 vColor;
 
-	uniform vec2 mouse;
+  uniform vec2 mouse;
 
-	vec2 scale = vec2(mouse.x,mouse.y);
-	void main() {
-	   gl_Position = vec4(pos.x*scale.x,pos.y*scale.y,pos.z,1.0);
-	   v_texCoord = texcoord;
-	   vColor = color;
-	}
+  vec2 scale = vec2(mouse.x,mouse.y);
+  void main() {
+     gl_Position = vec4(pos.x*scale.x,pos.y*scale.y,pos.z,1.0);
+     v_texCoord = texcoord;
+     vColor = color;
+  }
 </script>
 <!--<script id="basFs" type="x-shader/x-fragment">
     precision mediump float;
@@ -104,12 +104,12 @@ void main() {
 
     // sum += texture2D(u_image, v_texCoord + offset[i]) * kernel[i];
     sum += texture2D(u_image, v_texCoord + offset[i]) * kernel[i];
-        sum += texture2D(u_image, v_texCoord + offset[i]) *kernel3[i];
+    // sum += texture2D(u_image, v_texCoord + offset[i]) * kernel3[i];
 
     // sum += texture2D(u_image, v_texCoord + offset[i]) * kernel2[i];
     kernelWeight += kernel[i];
 
-    kernelWeight += kernel3[i];
+    // kernelWeight += kernel3[i];
     // kernelWeight += kernel2[i];
     // kernelWeight += kernel[00i];
   }
@@ -123,7 +123,7 @@ void main() {
 }
 </script>
 
-	<script id="ditherFs" type="x-shader/x-fragment">
+  <script id="ditherFs" type="x-shader/x-fragment">
     precision mediump float;
 
     uniform sampler2D u_image;
@@ -226,10 +226,35 @@ void main() {
             // gl_FragColor = dither8x8(gl_FragCoord.xy, color);
             gl_FragColor = color;
         }
-	</script>
-    <script id="reposFs" type="x-shader/x-fragment">
+  </script>
+    <script id="blurFs" type="x-shader/x-fragment">
+
+precision mediump float;
+uniform sampler2D u_image;
+uniform float step_w;
+uniform float step_h;
+
+varying vec2 v_texCoord;
+
+void main() {
+
+  vec2 tc = v_texCoord;
+  vec4 input0 = texture2D(u_image,tc);
+   
+  vec2 x1 = vec2(step_w, 0.0);
+  vec2 y1 = vec2(0.0, step_h);
+    
+  input0 += texture2D(u_image, tc+x1); // right
+  input0 += texture2D(u_image, tc-x1); // left
+  input0 += texture2D(u_image, tc+y1); // top
+  input0 += texture2D(u_image, tc-y1); // bottom
+
+  input0 *=0.2;
+
+  gl_FragColor = input0;
+}
 
     </script>
-	<script src="main.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
