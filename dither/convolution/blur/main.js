@@ -54,6 +54,9 @@ function initFbosAndShaders(){
 	ditherProgram = createProgram(gl, [baseVs, ditherFs]);
 	blurProgram = createProgram(gl, [baseVs, blurFs]);
 
+	gl.useProgram(blurProgram);
+	gl.uniform1f(gl.getUniformLocation(blurProgram, "step_w"), 1.0/canvas.width);
+	gl.uniform1f(gl.getUniformLocation(blurProgram, "step_h"), 1.0/canvas.height);
 	gl.useProgram(baseProgram);
 	gl.uniform1f(gl.getUniformLocation(baseProgram, "step_w"), 1.0/canvas.width);
 	gl.uniform1f(gl.getUniformLocation(baseProgram, "step_h"), 1.0/canvas.height);
