@@ -7,6 +7,8 @@ var delay = 0;
 var mouseX,mouseY, mapMouseX, mapMouseY;
 var video = document.createElement('video'),
     canvas = document.getElementById("canvas");
+var pressCount = 0;
+var spacePressed = false;
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -59,7 +61,6 @@ function getCamAsTexture(){
 	gl.bindTexture(gl.TEXTURE_2D, camTex);
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, camTex.image);
 }
-var spacePressed = false;
 function loop(){
 	window.requestAnimationFrame(loop);
 	if(videoLoaded){
@@ -115,29 +116,22 @@ window.addEventListener("mousemove", function(event){
 function map(value,max,minrange,maxrange) {
     return ((max-value)/(max))*(maxrange-minrange)+minrange;
 }
-var pressCount = 0;
+
+function pauseResume(){
+	if(pressCount % 2 == 0){
+		spacePressed = true;
+
+	} else {
+		spacePressed = false;
+	}
+	pressCount++;
+}
 window.addEventListener("keydown",function(event){
 	if(event.keyCode === 32){
-		console.log(pressCount);
-		if(pressCount % 2 == 0){
-			spacePressed = true;
-
-		} else {
-			spacePressed = false;
-		}
-		pressCount++;
-		// if(spacePressed){
-		// 	gl.useProgram(baseProgram);
-		// 	gl.uniform2f(gl.getUniformLocation(baseProgram, 'mouse'), 1.0,1.0);
-		// }
-
-		// if(spacePressed || pressCount % 2 !== 0){
-		// 	gl.useProgram(baseProgram);
-		//     gl.uniform2f(gl.getUniformLocation(baseProgram, "mouse"), mapMouseX, mapMouseY);
-		// }
-		// spacePressed = false;
+		pauseResume();
 	}
 })
+
 window.addEventListener('DOMContentLoaded', function(){ 
 	navigator.getUserMedia = navigator.getUserMedia || 
 							 navigator.webkitGetUserMedia || 
