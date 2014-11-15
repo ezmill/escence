@@ -39,9 +39,9 @@ function initFbosAndShaders(){
 	blurFbo = new pxFbo();
 	
 
-	fbo.allocate(canvas.width, canvas.height, true);
-	ditherFbo.allocate(canvas.width, canvas.height, true);
-	blurFbo.allocate(canvas.width, canvas.height, true);
+	fbo.allocate(window.innerWidth, window.innerHeight, true);
+	ditherFbo.allocate(window.innerWidth, window.innerHeight, true);
+	blurFbo.allocate(window.innerWidth, window.innerHeight, true);
 
 	baseVs = createShaderFromScriptElement(gl, "baseVs");
 	translateVs = createShaderFromScriptElement(gl, "translateVs");
@@ -85,17 +85,21 @@ function loop(){
 			gl.uniform2f(gl.getUniformLocation(baseProgram, 'mouse'), 1.0,1.0);
 		}
 		
-		fbo.start();
-		ditherFbo.draw(baseProgram)
-
-		ditherFbo.start();
-		blurFbo.draw(ditherProgram);
-
 		blurFbo.start();
 		fbo.draw(blurProgram);
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		fbo.start();
 		blurFbo.draw(baseProgram);
+
+		blurFbo.start();
+		ditherFbo.draw(ditherProgram);
+
+		ditherFbo.start();
+		fbo.draw(baseProgram);
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		fbo.draw(ditherProgram);
+		// baseTexture.draw(baseProgram, camTex);
 
 		gl.bindTexture(gl.TEXTURE_2D, camTex);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, camTex.image);
@@ -105,11 +109,13 @@ function loop(){
 function getNewImg(){
    //gets a new frame
    // requestAnimationFrame(getNewImg);
-   blurFbo.start();
+   fbo.start();
 	// gl.enable(gl.BLEND);
     // gl.blendFunc(gl.ONE_MINUS_DST_COLOR,gl.DST_COLOR); 
-    // gl.blendFunc(gl.ONE_MINUS_SRC_COLOR,gl.CONSTANT_COLOR); 
+    // gl.blendFunc(gl.ONE_MINUS_CONSTANT_COLOR,gl.CONSTANT_COLOR); 
+     // fbo.allocate(window.innerWidth, window.innerHeight, true);
    baseTexture.draw(baseProgram, camTex);
+
    			   // gl.disable(gl.BLEND);
 }
 function map(value,max,minrange,maxrange) {

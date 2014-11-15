@@ -103,8 +103,8 @@ function getNewImg(){
    //gets a new frame
    // requestAnimationFrame(getNewImg);
    reposFbo.start();
-	gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE_MINUS_DST_COLOR,gl.DST_COLOR); 
+	// gl.enable(gl.BLEND);
+    // gl.blendFunc(gl.ONE_MINUS_DST_COLOR,gl.DST_COLOR); 
     // gl.blendFunc(gl.ONE_MINUS_SRC_COLOR,gl.CONSTANT_COLOR); 
    baseTexture.draw(baseProgram, camTex);
    			   // gl.disable(gl.BLEND);

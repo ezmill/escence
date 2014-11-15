@@ -110,9 +110,9 @@ void main() {
   if (kernelWeight <= 0.0) {
      kernelWeight = 1.0;
   }
-  gl_FragColor =(vec4((sum/kernelWeight).rgb, 1.0));
+  // gl_FragColor =(vec4((sum/kernelWeight).rgb, 1.0));
   // gl_FragColor =(sum + tex0) *0.5;
-  // gl_FragColor =tex0;
+  gl_FragColor =tex0;
 }
 </script>
 
@@ -216,8 +216,8 @@ void main() {
 
         void main() {
             vec4 color = texture2D(u_image, v_texCoord);
-            gl_FragColor = dither8x8(gl_FragCoord.xy, color);
-            // gl_FragColor = color;
+            // gl_FragColor = dither8x8(gl_FragCoord.xy, color);
+            gl_FragColor = color;
         }
 	</script>
   <script id="reposFs" type="x-shader/x-fragment">
