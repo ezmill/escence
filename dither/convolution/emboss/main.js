@@ -105,11 +105,11 @@ function loop(){
 		reposFbo.draw(reposProgram);
 
 		reposFbo.start();
-		fbo.draw(ditherProgram);
+		fbo.draw(reposProgram);
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-		fbo.draw(reposProgram);
+		fbo.draw(ditherProgram);
 		// baseTexture.draw(baseProgram, camTex);
 
 		gl.bindTexture(gl.TEXTURE_2D, camTex);
@@ -121,6 +121,8 @@ function getNewImg(){
    //gets a new frame
    // requestAnimationFrame(getNewImg);
    fbo.start();
+   		// fbo.draw(reposProgram);
+
 	// gl.enable(gl.BLEND);
     // gl.blendFunc(gl.ONE_MINUS_DST_COLOR,gl.DST_COLOR); 
     // gl.blendFunc(gl.ONE_MINUS_DST_COLOR,gl.SRC_COLOR); 
