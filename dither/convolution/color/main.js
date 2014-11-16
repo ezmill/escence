@@ -72,15 +72,15 @@ function getCamAsTexture(){
 function loop(){
 	window.requestAnimationFrame(loop);
 	if(videoLoaded){
-	    delay++;
 		if(delay < 50){
 		    getNewImg();
+    	    delay++;
 
 		    // console.log(delay);
 		}
-	    if(delay%500 == 0){
-	    	getNewImg();
-	    }
+	    // if(delay%500 == 0){
+	    // 	getNewImg();
+	    // }
 		if(!spacePressed){
 			gl.useProgram(baseProgram);
 		    gl.uniform2f(gl.getUniformLocation(baseProgram, "mouse"), mapMouseX, mapMouseY);
